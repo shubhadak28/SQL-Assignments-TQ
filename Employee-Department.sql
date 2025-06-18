@@ -173,3 +173,114 @@ SELECT jh.*
 FROM Job_History jh
 JOIN Employees e ON jh.employee_id = e.employee_id
 WHERE e.salary > 10000;
+
+-- display name of emp who eran max salary
+
+SELECT first_name, last_name, salary
+FROM Employees
+WHERE salary = (SELECT MAX(salary) FROM Employees);
+
+-- 2nd highest salary
+
+SELECT first_name, last_name, salary
+FROM Employees
+WHERE salary = (
+    SELECT MAX(salary)
+    FROM Employees
+    WHERE salary < (
+        SELECT MAX(salary)
+        FROM Employees
+    )
+);
+
+-- nth hightest salary of emp
+
+SELECT DISTINCT salary
+FROM Employees
+ORDER BY salary DESC
+LIMIT 1 OFFSET 1;
+
+-- 3rd highest
+
+SELECT first_name, last_name, salary
+FROM Employees
+WHERE salary = (
+    SELECT DISTINCT salary
+    FROM Employees
+    ORDER BY salary DESC
+    LIMIT 1 OFFSET 2
+);
+
+-- get the emp who earn more than avg salary 
+
+SELECT employee_id, first_name, last_name, salary
+FROM Employees
+WHERE salary > (
+    SELECT AVG(salary) FROM Employees
+);
+
+
+-- show dept list & count of emp
+SELECT d.department_id, d.department_name, COUNT(e.employee_id) AS employee_count
+FROM Departments d
+LEFT JOIN Employees e ON d.department_id = e.department_id
+GROUP BY d.department_id, d.department_name;
+
+
+-- display emp working in dept with highest avg salary
+SELECT e.employee_id, e.first_name, e.last_name, e.salary, e.department_id
+FROM Employees e
+WHERE e.department_id = (
+    SELECT department_id
+    FROM Employees
+    GROUP BY department_id
+    ORDER BY AVG(salary) DESC
+    LIMIT 1
+);
+
+
+-- display name of employees from sales dept
+SELECT e.first_name, e.last_name
+FROM Employees e
+JOIN Departments d ON e.department_id = d.department_id
+WHERE d.department_name = 'Sales';
+
+
+-- get the emp who earn more than avg salary of their dept
+
+SELECT e.first_name, e.last_name, e.salary, e.department_id
+FROM Employees e
+WHERE e.salary > (
+    SELECT AVG(e2.salary)
+    FROM Employees e2
+    WHERE e2.department_id = e.department_id
+);
+
+-- list the dept where at least one emp is working & whos age is <27
+SELECT DISTINCT d.department_id, d.department_name
+FROM Departments d
+JOIN Employees e ON d.department_id = e.department_id
+WHERE TIMESTAMPDIFF(YEAR, e.hire_date, CURDATE()) < 27;
+
+-- get emp details whos salary is highest than the max in their dept
+
+SELECT e.*
+FROM Employees e
+WHERE e.salary > (
+    SELECT MAX(e2.salary)
+    FROM Employees e2
+    WHERE e2.department_id = e.department_id
+    AND e2.employee_id <> e.employee_id  -- exclude self when comparing
+);
+
+-- emp earning more than salary of all others in the same dept
+SELECT e.*
+FROM Employees e
+WHERE e.salary > ALL (
+    SELECT e2.salary
+    FROM Employees e2
+    WHERE e2.department_id = e.department_id
+    AND e2.employee_id <> e.employee_id
+);
+
+select * from Employees where department_id=103
